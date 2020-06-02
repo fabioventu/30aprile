@@ -54,6 +54,22 @@ export class AppComponent implements OnInit {
     console.log(val);
     return false;
   }
+  avgColorMap = (media) =>
+  {
+    if(media <= 36) return "#00FF00";
+    if(36 < media && media <= 40) return "#33ff00";
+    if(40 < media && media <= 58) return "#66ff00";
+    if(58 < media && media <= 70) return "#99ff00";
+    if(70 < media && media <= 84) return "#ccff00";
+    if(84 < media && media <= 100) return "#FFFF00";
+    if(100 < media && media <= 116) return "#FFCC00";
+    if(116 < media && media <= 1032) return "#ff9900";
+    if(1032 < media && media <= 1068) return "#ff6600";
+    if(1068 < media && media <= 1948) return "#FF3300";
+    if(1948 < media && media <= 3780) return "#FF0000";
+    return "#FF0000"
+  }
+
 
 
   styleFunc = (feature) => {
@@ -104,25 +120,41 @@ circleDoubleClicked(circleCenter)
   {
     console.log(circleCenter); //Voglio ottenere solo i valori entro questo cerchio
     console.log(this.radius);
-
-    this.circleLat = circleCenter.coords.lat; //Aggiorno le coordinate del cerchio
-    this.circleLng = circleCenter.coords.lng; //Aggiorno le coordinate del cerchio
-
-    //Non conosco ancora le prestazioni del DB, non voglio fare ricerche troppo onerose
+    this.circleLat = circleCenter.coords.lat;
+    this.circleLng = circleCenter.coords.lng;
     if(this.radius > this.maxRadius)
     {
       console.log("area selezionata troppo vasta sarà reimpostata a maxRadius");
-       this.radius = this.maxRadius;
+      this.radius = this.maxRadius;
     }
-    console.log ("raggio in gradi " + (this.radius * 0.00001)/1.1132)
+
     let raggioInGradi = (this.radius * 0.00001)/1.1132;
-    //Voglio spedire al server una richiesta che mi ritorni tutte le abitazioni all'interno del cerchio
-    this.obsCiVett = this.http.get<Ci_vettore[]>(`https://3000-c1010fac-8c69-44e8-b00e-8998a3ee1fbc.ws-eu01.gitpod.io/ci_geovettore/
+
+
+    const urlciVett = `${this.serverUrl}/ci_geovettore/
     ${this.circleLat}/
     ${this.circleLng}/
-    ${raggioInGradi}`);
+    ${raggioInGradi}`;
+
+    const urlGeoGeom = `${this.serverUrl}/geogeom/
+    ${this.circleLat}/
+    ${this.circleLng}/
+    ${raggioInGradi}`;
+    //Posso riusare lo stesso observable e lo stesso metodo di gestione del metodo cambiaFoglio
+    //poichè riceverò lo stesso tipo di dati
+    //Divido l'url andando a capo per questioni di leggibilità non perchè sia necessario
+    this.obsCiVett = this.http.get<Ci_vettore[]>(urlciVett);
     this.obsCiVett.subscribe(this.prepareCiVettData);
+
+    this.obsGeoData = this.http.get<GeoFeatureCollection>(urlGeoGeom);
+    this.obsGeoData.subscribe(this.prepareData);
+
+    //console.log ("raggio in gradi " + (this.radius * 0.00001)/1.1132)
+
+    //Voglio spedire al server una richiesta che mi ritorni tutte le abitazioni all'interno del cerchio
+
   }
+
 
 
 }
